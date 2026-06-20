@@ -10,36 +10,44 @@
 <body>
   <div class="header">
     <div class="auth-links">
-      <a href="login.html">Login</a> | 
-      <a href="signup.html">Sign up</a>
+      <a href="login.html">LOGIN</a>
+      <a href="signup.html">SIGN UP</a>
+      <button id="logoutBtn" class="auth-action" type="button">LOGOUT</button>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <span class="theme-option theme-option-light" aria-hidden="true">☼</span>
+        <span class="theme-option theme-option-dark" aria-hidden="true">☾</span>
+        <span class="theme-thumb" aria-hidden="true"></span>
+      </button>
     </div>
-    <h1>Pomodoro Timer</h1>
   </div>
 
   <div class="container">
     <div class="timer">
       <p id="sessionDisplay">25:00</p>
-      <p id="status">Work Time</p>
+      <p id="status">WORK TIME</p>
       <div class="controls">
-        <button id="startStopBtn">Start</button>
-        <button id="resetBtn">Reset</button>
-        <button id="analyticsBtn">View Analytics</button>
+        <button id="startStopBtn">START</button>
+        <button id="resetBtn">RESET</button>
+        <button id="analyticsBtn">VIEW ANALYTICS</button>
       </div>
     </div>
     
     <div class="project">
-      <input type="text" id="projectInput" placeholder="Enter task...">
-      <button id="addProjectBtn">Add Task</button>
+      <h2>Tasks</h2>
+      <div class="task-entry">
+      <input type="text" id="projectInput" placeholder="Enter a task...">
+      <button id="addProjectBtn">ADD TASK</button>
+      </div>
       <ul id="projectList"></ul>
     </div>
     </div>
 
   <div id="analyticsSection" style="display: none;">
     <div id="analyticsData"></div>
-    <button id="backBtn" class="back-button">Back</button>
+    <button id="backBtn" class="back-button">BACK</button>
   </div>
 
-  <script src="auth.js"></script>
+  <script src="config.js"></script>
   <script src="script.js"></script>
     
 </body>
