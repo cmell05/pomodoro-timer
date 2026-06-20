@@ -1,18 +1,30 @@
 // Pomodoro Timer Setup
-let workDuration = 25 * 60;
-let breakDuration = 5 * 60;
+const DEFAULT_WORK_MINUTES = 25;
+const DEFAULT_BREAK_MINUTES = 5;
+
+let workDuration = DEFAULT_WORK_MINUTES * 60;
+let breakDuration = DEFAULT_BREAK_MINUTES * 60;
 let isWorkTime = true;
 let timer;
 let currentTime = workDuration;
+let pendingMode = null;
 
 const TASKS_KEY = "pomodoroTasks";
 const SESSIONS_KEY = "pomodoroSessions";
+const TIMER_SETTINGS_KEY = "pomodoroTimerSettings";
 const API_BASE_URL = window.POMODORO_API_BASE_URL || "http://localhost:4000";
 
 const sessionDisplay = document.getElementById("sessionDisplay");
 const statusDisplay = document.getElementById("status");
 const startStopBtn = document.getElementById("startStopBtn");
 const resetBtn = document.getElementById("resetBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsDialog = document.getElementById("settingsDialog");
+const settingsPanel = document.getElementById("settingsPanel");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+const cancelSettingsBtn = document.getElementById("cancelSettingsBtn");
+const workMinutesInput = document.getElementById("workMinutesInput");
+const breakMinutesInput = document.getElementById("breakMinutesInput");
 const themeToggle = document.getElementById("themeToggle");
 const projectInput = document.getElementById("projectInput");
 const addProjectBtn = document.getElementById("addProjectBtn");
@@ -22,9 +34,24 @@ const analyticsSection = document.getElementById("analyticsSection");
 const analyticsDiv = document.getElementById("analyticsData");
 const mainContainer = document.querySelector(".container");
 const backBtn = document.getElementById("backBtn");
+const loginLink = document.getElementById("loginLink");
+const signupLink = document.getElementById("signupLink");
 const logoutBtn = document.getElementById("logoutBtn");
+const sessionDialog = document.getElementById("sessionDialog");
+const sessionDialogTitle = document.getElementById("sessionDialogTitle");
+const sessionDialogMessage = document.getElementById("sessionDialogMessage");
+const sessionDialogKicker = document.getElementById("sessionDialogKicker");
+const sessionDialogBtn = document.getElementById("sessionDialogBtn");
 
 let isRunning = false;
+
+function renderAuthControls() {
+  const isLoggedIn = Boolean(getToken());
+
+  if (loginLink) loginLink.hidden = isLoggedIn;
+  if (signupLink) signupLink.hidden = isLoggedIn;
+  if (logoutBtn) logoutBtn.hidden = !isLoggedIn;
+}
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -53,7 +80,16 @@ themeToggle?.addEventListener("click", () => {
 logoutBtn?.addEventListener("click", () => {
   localStorage.removeItem("token");
   localStorage.removeItem("pomodoroCurrentUser");
-  alert("Logged out.");
+  renderAuthControls();
+  renderTasks();
+
+  if (analyticsSection && mainContainer) {
+    analyticsSection.style.display = "none";
+    mainContainer.style.display = "grid";
+  }
+  if (analyticsDiv) {
+    analyticsDiv.innerHTML = "";
+  }
 });
 
 function readStoredArray(key) {
@@ -65,6 +101,25 @@ function readStoredArray(key) {
   }
 }
 
+function getCurrentStorageOwner() {
+  try {
+    const currentUser = JSON.parse(
+      localStorage.getItem("pomodoroCurrentUser") || "null"
+    );
+    if (currentUser?.email) {
+      return `user:${currentUser.email.toLowerCase()}`;
+    }
+  } catch {
+    // Fall back to guest storage if saved user data is malformed.
+  }
+
+  return "guest";
+}
+
+function getScopedStorageKey(key) {
+  return `${key}:${getCurrentStorageOwner()}`;
+}
+
 function createId() {
   return crypto.randomUUID
     ? crypto.randomUUID()
@@ -72,23 +127,99 @@ function createId() {
 }
 
 function getTasks() {
-  return readStoredArray(TASKS_KEY);
+  return readStoredArray(getScopedStorageKey(TASKS_KEY));
 }
 
 function saveTasks(tasks) {
-  localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+  localStorage.setItem(getScopedStorageKey(TASKS_KEY), JSON.stringify(tasks));
 }
 
 function getSessions() {
-  return readStoredArray(SESSIONS_KEY);
+  return readStoredArray(getScopedStorageKey(SESSIONS_KEY));
 }
 
 function saveSessions(sessions) {
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+  localStorage.setItem(
+    getScopedStorageKey(SESSIONS_KEY),
+    JSON.stringify(sessions)
+  );
 }
 
 function getToken() {
   return localStorage.getItem("token");
+}
+
+function getTimerSettings() {
+  try {
+    const settings = JSON.parse(localStorage.getItem(TIMER_SETTINGS_KEY) || "{}");
+    return {
+      workMinutes: Number(settings.workMinutes) || DEFAULT_WORK_MINUTES,
+      breakMinutes: Number(settings.breakMinutes) || DEFAULT_BREAK_MINUTES,
+    };
+  } catch {
+    return {
+      workMinutes: DEFAULT_WORK_MINUTES,
+      breakMinutes: DEFAULT_BREAK_MINUTES,
+    };
+  }
+}
+
+function saveTimerSettings(workMinutes, breakMinutes) {
+  localStorage.setItem(
+    TIMER_SETTINGS_KEY,
+    JSON.stringify({ workMinutes, breakMinutes })
+  );
+}
+
+function applyTimerSettings({ workMinutes, breakMinutes }) {
+  workDuration = workMinutes * 60;
+  breakDuration = breakMinutes * 60;
+
+  if (workMinutesInput) workMinutesInput.value = workMinutes;
+  if (breakMinutesInput) breakMinutesInput.value = breakMinutes;
+
+  if (!isRunning) {
+    currentTime = isWorkTime ? workDuration : breakDuration;
+    updateDisplay();
+  }
+}
+
+function openSettings() {
+  const settings = getTimerSettings();
+  if (workMinutesInput) workMinutesInput.value = settings.workMinutes;
+  if (breakMinutesInput) breakMinutesInput.value = settings.breakMinutes;
+  settingsDialog.hidden = false;
+  settingsBtn.classList.add("is-active");
+  workMinutesInput?.focus();
+}
+
+function closeSettings() {
+  settingsDialog.hidden = true;
+  settingsBtn.classList.remove("is-active");
+}
+
+function showSessionDialog({ title, message, kicker, buttonText, nextMode }) {
+  sessionDialogTitle.textContent = title;
+  sessionDialogMessage.textContent = message;
+  sessionDialogKicker.textContent = kicker;
+  sessionDialogBtn.textContent = buttonText;
+  pendingMode = nextMode;
+  sessionDialog.hidden = false;
+  sessionDialogBtn.focus();
+}
+
+function closeSessionDialog() {
+  sessionDialog.hidden = true;
+  pendingMode = null;
+}
+
+function startMode(mode) {
+  clearInterval(timer);
+  isRunning = false;
+  isWorkTime = mode === "work";
+  currentTime = isWorkTime ? workDuration : breakDuration;
+  updateDisplay();
+  toggleTimer();
 }
 
 function formatTime(seconds) {
@@ -133,13 +264,27 @@ function toggleTimer() {
       recordCompletedSession();
     }
 
-    isWorkTime = !isWorkTime;
-    currentTime = isWorkTime ? workDuration : breakDuration;
+    clearInterval(timer);
+    isRunning = false;
+    startStopBtn.textContent = "START";
+    const completedWork = isWorkTime;
     updateDisplay();
-    alert(
-      isWorkTime
-        ? "Break over! Back to work!"
-        : "Work session complete! Time for a break!"
+    showSessionDialog(
+      completedWork
+        ? {
+            kicker: "Work complete",
+            title: "Start your break?",
+            message: "Nice work. Take a few minutes to reset before the next focus block.",
+            buttonText: "START BREAK",
+            nextMode: "break",
+          }
+        : {
+            kicker: "Break complete",
+            title: "Start another focus session?",
+            message: "Your break is done. Begin the next work session when ready.",
+            buttonText: "START WORK",
+            nextMode: "work",
+          }
     );
   }, 1000);
 
@@ -187,8 +332,22 @@ function renderTasks() {
     const span = document.createElement("span");
     span.textContent = task.text;
 
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "task-delete";
+    deleteButton.setAttribute("aria-label", `Delete ${task.text}`);
+    deleteButton.textContent = "🗑";
+    deleteButton.addEventListener("click", () => {
+      const updatedTasks = getTasks().filter(
+        (storedTask) => storedTask.id !== task.id
+      );
+      saveTasks(updatedTasks);
+      renderTasks();
+    });
+
     listItem.appendChild(checkbox);
     listItem.appendChild(span);
+    listItem.appendChild(deleteButton);
     projectList.appendChild(listItem);
   });
 }
@@ -228,6 +387,13 @@ function getAnalyticsPayload() {
       completedAt: task.completedAt,
     })),
   };
+}
+
+function hasLocalAnalyticsData() {
+  return (
+    getSessions().length > 0 ||
+    getTasks().some((task) => task.completed)
+  );
 }
 
 function renderAnalytics(data = getAnalyticsPayload()) {
@@ -275,18 +441,24 @@ function renderAnalytics(data = getAnalyticsPayload()) {
 async function syncAnalytics() {
   const token = getToken();
   if (!token) {
-    alert("Please login or sign up to view analytics.");
+    analyticsDiv.innerHTML = `
+      <h2>Login required</h2>
+      <p>Please login or sign up to view analytics.</p>
+    `;
+    analyticsSection.style.display = "block";
+    mainContainer.style.display = "none";
     window.location.href = "login.html";
     return;
   }
 
+  const hasLocalData = hasLocalAnalyticsData();
   const response = await fetch(`${API_BASE_URL}/api/analytics`, {
-    method: "PUT",
+    method: hasLocalData ? "PUT" : "GET",
     headers: {
-      "Content-Type": "application/json",
+      ...(hasLocalData ? { "Content-Type": "application/json" } : {}),
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(getAnalyticsPayload()),
+    ...(hasLocalData ? { body: JSON.stringify(getAnalyticsPayload()) } : {}),
   });
   const data = await response.json();
 
@@ -300,6 +472,57 @@ async function syncAnalytics() {
 startStopBtn.addEventListener("click", toggleTimer);
 resetBtn.addEventListener("click", resetTimer);
 addProjectBtn.addEventListener("click", addTask);
+
+settingsBtn.addEventListener("click", () => {
+  openSettings();
+});
+
+settingsPanel.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const workMinutes = Number(workMinutesInput.value);
+  const breakMinutes = Number(breakMinutesInput.value);
+
+  if (workMinutes < 1 || breakMinutes < 1) {
+    workMinutesInput.focus();
+    return;
+  }
+
+  saveTimerSettings(workMinutes, breakMinutes);
+  applyTimerSettings({ workMinutes, breakMinutes });
+  resetTimer();
+  closeSettings();
+});
+
+closeSettingsBtn.addEventListener("click", closeSettings);
+cancelSettingsBtn.addEventListener("click", closeSettings);
+sessionDialogBtn.addEventListener("click", () => {
+  const nextMode = pendingMode;
+  closeSessionDialog();
+
+  if (nextMode) {
+    startMode(nextMode);
+  }
+});
+settingsDialog.addEventListener("click", (event) => {
+  if (event.target === settingsDialog) {
+    closeSettings();
+  }
+});
+sessionDialog.addEventListener("click", (event) => {
+  if (event.target === sessionDialog) {
+    closeSessionDialog();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !settingsDialog.hidden) {
+    closeSettings();
+  }
+  if (event.key === "Escape" && !sessionDialog.hidden) {
+    closeSessionDialog();
+  }
+});
 
 projectInput.addEventListener("keypress", (event) => {
   if (event.key === "Enter") {
@@ -325,5 +548,7 @@ backBtn.addEventListener("click", () => {
   mainContainer.style.display = "grid";
 });
 
+applyTimerSettings(getTimerSettings());
 updateDisplay();
+renderAuthControls();
 renderTasks();

@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 :root {
   --bg: #fff7f8;
   --bg-secondary: #f8e9ee;
@@ -273,6 +277,152 @@ button:hover {
   background: var(--accent);
 }
 
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 16, 22, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.settings-modal {
+  width: min(380px, 100%);
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+  color: #221a21;
+  border: 1px solid rgba(34, 26, 33, 0.12);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 28px 80px rgba(28, 18, 28, 0.32);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #221a21;
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  color: #221a21;
+  background: #f1edf0;
+}
+
+.settings-modal label {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  color: #4a3d47;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.settings-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.settings-input-row span {
+  color: #4a3d47;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: lowercase;
+}
+
+.settings-modal input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(34, 26, 33, 0.18);
+  border-radius: 14px;
+  padding: 0 12px;
+  color: #221a21;
+  background: #ffffff;
+  outline: none;
+}
+
+.settings-modal input:focus {
+  border-color: #7662b8;
+  box-shadow: 0 0 0 4px rgba(118, 98, 184, 0.14);
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modal-actions button:first-child {
+  color: #221a21;
+  background: #f1edf0;
+}
+
+.modal-actions button:last-child {
+  background: #2f9e73;
+}
+
+.session-modal {
+  width: min(340px, 100%);
+  padding: 24px;
+  text-align: center;
+  color: #221a21;
+  border: 1px solid rgba(34, 26, 33, 0.12);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 28px 80px rgba(28, 18, 28, 0.32);
+}
+
+.session-modal p {
+  margin-bottom: 0;
+}
+
+#sessionDialogKicker {
+  margin-bottom: 8px;
+  color: #7662b8;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.session-modal h2 {
+  margin-bottom: 10px;
+  color: #221a21;
+  font-size: 1.45rem;
+}
+
+#sessionDialogMessage {
+  color: #4a3d47;
+  line-height: 1.45;
+}
+
+#sessionDialogBtn {
+  width: 100%;
+  margin-top: 20px;
+  background: #7662b8;
+}
+
 .project {
   padding: 24px;
   display: flex;
@@ -331,16 +481,35 @@ li {
   border: 1px solid var(--border);
 }
 
+li span {
+  flex: 1;
+}
+
 li input[type="checkbox"] {
   width: 18px;
   height: 18px;
   accent-color: var(--accent);
 }
 
-.completed-task span,
-.completed-task {
+.completed-task > span {
   color: var(--muted);
   text-decoration: line-through;
+}
+
+.task-delete {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  color: var(--danger);
+  background: transparent;
+  font-size: 0.95rem;
+  box-shadow: none;
+}
+
+.task-delete:hover {
+  background: color-mix(in srgb, var(--danger), transparent 90%);
+  box-shadow: none;
 }
 
 #analyticsSection {
@@ -426,6 +595,35 @@ li input[type="checkbox"] {
   margin: 18px 0 0;
   color: var(--muted);
   text-align: center;
+}
+
+.auth-container .form-message {
+  margin-top: 14px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid rgba(200, 79, 97, 0.22);
+  border-radius: 14px;
+  color: #8f3343;
+  background: rgba(200, 79, 97, 0.08);
+  text-align: left;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.form-message-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #c84f61;
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .auth-container a {
