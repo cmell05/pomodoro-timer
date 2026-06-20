@@ -251,14 +251,17 @@ function renderAnalytics(data = getAnalyticsPayload()) {
             ? `<ul class="tasks-list">
                 ${completedTasks
                   .map(
-                    (task) => `
-                      <li>
-                        <span>${task.text}</span>
+                    (task) => {
+                      const taskName = task.task || task.text || "Untitled task";
+                      return `
+                        <li>
+                        <span>${taskName}</span>
                         <span class="completion-date">
                           ${new Date(task.completedAt).toLocaleDateString()}
                         </span>
                       </li>
-                    `
+                      `;
+                    }
                   )
                   .join("")}
               </ul>`
