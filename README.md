@@ -1,61 +1,129 @@
 # Pomodoro Timer
 
-A productivity web application that implements the **Pomodoro Technique**, helping users manage their time and tasks efficiently. This project includes a **frontend** (built with HTML, CSS, and JavaScript) and a **backend** (powered by Node.js and MongoDB).
+A focused Pomodoro timer web app with local task tracking, customizable work/break sessions, light and dark themes, account login, and authenticated analytics.
 
----
+## Features
 
-## 🌟 Features
+- Pomodoro timer with work and break sessions
+- Custom work and break durations
+- Light/dark mode toggle
+- Local task list with add, complete, and delete actions
+- Signup/login with JWT authentication
+- User-specific analytics for completed sessions, total focus time, and completed tasks
+- Responsive frontend built with plain HTML, CSS, and JavaScript
+- Express backend with MongoDB persistence for users and analytics
 
-### **Frontend**
-- Intuitive timer with start, stop, and reset functionality.
-- Task management: Add, view, and delete tasks.
-- Analytics section: Track session data (number of sessions and tasks completed)
-- Responsive design for desktop users.
+## Tech Stack
 
-### **Backend**
-- **User Authentication**: Signup, login, and secure session handling.
-- **Task Management**: Save, retrieve, and delete user tasks.
-- **Session Tracking**: Log completed Pomodoro sessions for analytics.
-- **Database**: MongoDB for storing user and task data.
+**Frontend**
 
----
+- HTML
+- CSS
+- JavaScript
+- `localStorage` for per-user task storage and timer preferences
 
-## 🚀 Getting Started
+**Backend**
 
-### Prerequisites
-1. **Node.js**: Install from [Node.js Official Site](https://nodejs.org/).
-2. **MongoDB**: Install and set up a MongoDB instance.
+- Node.js
+- Express
+- MongoDB Atlas
+- Mongoose
+- bcryptjs for password hashing
+- JSON Web Tokens for authenticated API requests
+- CORS for frontend/backend communication
 
----
+## Project Structure
 
-### **Setup**
-1. Open `index.html` in your browser to use the app.
----
+```text
+.
+├── index.html          # Main timer UI
+├── login.html          # Login page
+├── signup.html         # Signup page
+├── script.js           # Timer, tasks, settings, analytics UI logic
+├── auth.js             # Login/signup frontend logic
+├── config.js           # Local vs production backend URL
+├── style.css           # App styling
+└── backend/
+    ├── server.js       # Express API, auth, analytics routes
+    └── package.json    # Backend dependencies and scripts
+```
 
-## 🛠️ Built With
+## Local Development
 
-**Frontend:** HTML, CSS, JavaScript  
-**Backend:** Node.js, Express.js, MongoDB (Mongoose for schema modeling), JSON Web Tokens (JWT) for authentication
+### 1. Start the backend
 
----
-    
-## 📖 How to Use
+```bash
+cd backend
+npm install
+npm start
+```
 
-1. **Sign Up and Login**  
-   - Navigate to the signup page  
-   - Create an account and log in
+The backend runs on:
 
-2. **Use the Timer**  
-   - Click **Start** to begin the timer  
-   - The timer starts with 25 minutes for Work Time  
-   - After 25 minutes, it automatically switches to a 5-minute Break Time  
-   - Use the **Reset** button to stop and reset the timer
+```text
+http://localhost:4000
+```
 
-3. **Manage Tasks**  
-   - Add tasks using the input field  
-   - Mark tasks as complete  
-   - Track task completion
+If `MONGODB_URI` is not configured, the backend falls back to a local JSON file for development.
 
-4. **View Analytics**  
-   - Click on **View Analytics**  
-   - See completed session data including the number of Pomodoro sessions completed and associated tasks
+### 2. Start the frontend
+
+From the project root:
+
+```bash
+python3 -m http.server 5173
+```
+
+Then open:
+
+```text
+http://localhost:5173
+```
+
+`config.js` automatically points localhost to `http://localhost:4000`.
+
+## Backend Environment Variables
+
+Create `backend/.env` for local backend configuration:
+
+```env
+JWT_SECRET=replace_with_a_long_random_secret
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/pomodoro
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+For production, add the same variables in the hosting provider's environment variable settings.
+
+## API Endpoints
+
+```text
+GET  /api/health
+POST /api/signup
+POST /api/login
+GET  /api/analytics
+PUT  /api/analytics
+```
+
+Protected analytics routes require:
+
+```text
+Authorization: Bearer <jwt_token>
+```
+
+## Deployment
+
+The backend is configured to run as a Node service.
+
+Current production backend URL:
+
+```text
+https://pomodoro-timer-l36d.onrender.com
+```
+
+The frontend can be deployed as a static site on Vercel, Netlify, or GitHub Pages. In production, `config.js` points API requests to the Render backend.
+
+## Notes
+
+- Tasks are stored in the browser using user-scoped `localStorage` keys.
+- Analytics are stored per authenticated user in the backend.
+- `.env`, local backend data, and `node_modules` should not be committed.
